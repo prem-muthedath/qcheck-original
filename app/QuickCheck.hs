@@ -2,10 +2,11 @@
 
 -- | Original QuickCheck implementation (from Hughes' paper; see `REF` below).
 -- Prem Muthedath:
---    1. + type signatures, some functions;
+--    1. +, modified type signatures, + some functions;
 --    2. fixed compilation errors;
---    3. cabal packaging;
---    4. docs.
+--    3. error handling for empty [] arguments;
+--    4. cabal packaging;
+--    5. docs.
 
 -- Purpose: study & understand QuickCheck. this original version is very apt, as 
 -- it is simple & short, yet has all the key features of QuickCheck today.
@@ -55,19 +56,26 @@ instance Monad Gen where
       in m2 n r2)
 
 elements :: [a] -> Gen a
-elements xs = (xs !!) `liftM` choose (0, length xs-1)
+elements [] = error "QuickCheck.elements used with empty list."
+elements xs = (xs !!) `liftM` choose (0, length xs - 1)
 
 vector :: forall a. Arbitrary a => Int -> Gen [a]
 vector n = sequence [ arbitrary :: Gen a | _ <- [1..n] ]
 
 oneof :: [Gen a] -> Gen a
+oneof [] = error "QuickCheck.oneof used with empty list."
 oneof gens = elements gens >>= id
 
+-- | Prem + error handling; modeled after QuickCheck code @ hackage.
 frequency :: forall a. [(Int, Gen a)] -> Gen a
 frequency [] = error "QuickCheck.frequency used with empty list."
-frequency xs = choose (1, sum (map fst xs)) >>= (`pick` xs)
+frequency xs | any (< 0) (map fst xs) =
+               error "QuickCheck.frequency: negative weight."
+             | all (== 0) (map fst xs) =
+               error "QuickCheck.frequency: all weights zero."
+             | otherwise = choose (1, sum (map fst xs)) >>= (`pick` xs)
   where pick :: Int -> [(Int, Gen a)] -> Gen a
-        pick _ [] = error "QuickCheck.frequency used with empty list."
+        pick _ [] = error "QuickCheck.pick used with empty list."
         pick n ((k, x):ys) | n <= k    = x
                            | otherwise = pick (n-k) ys
 
