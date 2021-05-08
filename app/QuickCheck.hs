@@ -1,15 +1,25 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module QuickCheck where
+-- | Original QuickCheck implementation (from Hughes' paper; see `REF` below).
+-- Prem Muthedath:
+--    1. + type signatures, some functions;
+--    2. fixed compilation errors;
+--    3. cabal packaging;
+--    4. docs.
 
-import System.Random
-import Control.Monad
+-- Purpose: study & understand QuickCheck. this original version is very apt, as 
+-- it is simple & short, yet has all the key features of QuickCheck today.
 
--- | REF:
+-- REF:
 -- QuickCheck @ hackage: https://tinyurl.com/e98m55wc
 -- System.Random @ hackage: https://tinyurl.com/js4wzabf
 -- begriffs: https://begriffs.com/posts/2017-01-14-design-use-quickcheck.html
 -- hughes: https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quick.pdf
+
+module QuickCheck where
+
+import System.Random
+import Control.Monad
 
 ------------------------------ Generators --------------------------------------
 newtype Gen a = Gen (Int -> StdGen -> a)
@@ -24,12 +34,10 @@ variant v (Gen m) = Gen (\n r ->
         rands r0 = r1 : rands r2 where (r1, r2) :: (t, t) = split r0
 
 promote :: (a -> Gen b) -> Gen (a -> b)
-promote f = Gen (\n r -> \a ->
-    let Gen m = f a in m n r)
+promote f = Gen (\n r -> \a -> let Gen m = f a in m n r)
 
 sized :: (Int -> Gen a) -> Gen a
-sized fgen = Gen (\n r ->
-    let Gen m = fgen n in m n r)
+sized fgen = Gen (\n r -> let Gen m = fgen n in m n r)
 
 instance Functor Gen where
   fmap f (Gen x) = Gen (\n r -> f (x n r))
@@ -107,17 +115,14 @@ instance Coarbitrary Int where
                 | n < 0     = variant 2 . coarbitrary (-n)
                 | otherwise = variant 1 . coarbitrary (n `div` 2)
 
-instance (Coarbitrary a, Coarbitrary b)
-        => Coarbitrary (a, b) where
+instance (Coarbitrary a, Coarbitrary b) => Coarbitrary (a, b) where
   coarbitrary (a, b) = coarbitrary a . coarbitrary b
 
 instance Coarbitrary a => Coarbitrary [a] where
   coarbitrary []      = variant 0
-  coarbitrary (a:as)  =
-    variant 1 . coarbitrary a . coarbitrary as
+  coarbitrary (a:as)  = variant 1 . coarbitrary a . coarbitrary as
 
-instance (Arbitrary a, Coarbitrary b)
-        => Coarbitrary (a -> b) where
+instance (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) where
   coarbitrary f gen = arbitrary >>= ((`coarbitrary` gen) . f)
 
 ------------------------------ Property ----------------------------------------
@@ -127,8 +132,7 @@ data Result = Result
   {ok :: Maybe Bool, stamp :: [String], arguments :: [String]}
 
 nothing :: Result
-nothing = Result
-  {ok = Nothing, stamp = [], arguments = []}
+nothing = Result {ok = Nothing, stamp = [], arguments = []}
 
 result :: Result -> Property
 result res = Prop (return res)
@@ -142,8 +146,7 @@ instance Testable Bool where
 instance Testable Property where
   property prop = prop
 
-instance (Arbitrary a, Show a, Testable b)
-            => Testable (a -> b) where
+instance (Arbitrary a, Show a, Testable b) => Testable (a -> b) where
   property f = forAll arbitrary f
 
 evaluate :: Testable a => a -> Gen Result
