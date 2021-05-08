@@ -55,6 +55,7 @@ instance Monad Gen where
           Gen m2                       = k (m1 n r1)
       in m2 n r2)
 
+-- | Prem + error handling.
 elements :: [a] -> Gen a
 elements [] = error "QuickCheck.elements used with empty list."
 elements xs = (xs !!) `liftM` choose (0, length xs - 1)
@@ -62,6 +63,7 @@ elements xs = (xs !!) `liftM` choose (0, length xs - 1)
 vector :: forall a. Arbitrary a => Int -> Gen [a]
 vector n = sequence [ arbitrary :: Gen a | _ <- [1..n] ]
 
+-- | Prem + error handling.
 oneof :: [Gen a] -> Gen a
 oneof [] = error "QuickCheck.oneof used with empty list."
 oneof gens = elements gens >>= id
