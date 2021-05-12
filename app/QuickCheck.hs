@@ -21,24 +21,10 @@ module QuickCheck where
 
 import System.Random
 import Control.Monad
+import qualified Data.Map as M
 
 ------------------------------ Generators --------------------------------------
 newtype Gen a = Gen (Int -> StdGen -> a)
-
-choose :: Random a => (a, a) -> Gen a
-choose bounds = Gen (\_ r -> fst (randomR bounds r))
-
-variant :: Int -> Gen a -> Gen a
-variant v (Gen m) = Gen (\n r ->
-    m n (rands r !! (v + 1)))
-  where rands :: forall t. RandomGen t => t -> [t]
-        rands r0 = r1 : rands r2 where (r1, r2) :: (t, t) = split r0
-
-promote :: (a -> Gen b) -> Gen (a -> b)
-promote f = Gen (\n r -> \a -> let Gen m = f a in m n r)
-
-sized :: (Int -> Gen a) -> Gen a
-sized fgen = Gen (\n r -> let Gen m = fgen n in m n r)
 
 instance Functor Gen where
   fmap f (Gen x) = Gen (\n r -> f (x n r))
@@ -54,6 +40,22 @@ instance Monad Gen where
       let (r1, r2) :: (StdGen, StdGen) = split r0
           Gen m2                       = k (m1 n r1)
       in m2 n r2)
+
+choose :: Random a => (a, a) -> Gen a
+choose bounds = Gen (\_ r -> fst (randomR bounds r))
+
+-- | NOTE: `rands` is infinitly recursive; but the code still works because 
+-- haskell is lazy: after `v + 1` index, `rands` is not called anymore.
+variant :: Int -> Gen a -> Gen a
+variant v (Gen m) = Gen (\n r -> m n (rands r !! (v + 1)))
+  where rands :: forall t. RandomGen t => t -> [t]
+        rands r0 = r1 : rands r2 where (r1, r2) :: (t, t) = split r0
+
+promote :: (a -> Gen b) -> Gen (a -> b)
+promote f = Gen (\n r -> \a -> let Gen m = f a in m n r)
+
+sized :: (Int -> Gen a) -> Gen a
+sized fgen = Gen (\n r -> let Gen m = fgen n in m n r)
 
 -- | Prem + error handling.
 elements :: [a] -> Gen a
@@ -75,7 +77,7 @@ frequency xs | any (< 0) (map fst xs) =
                error "QuickCheck.frequency: negative weight."
              | all (== 0) (map fst xs) =
                error "QuickCheck.frequency: all weights zero."
-             | otherwise = choose (1, sum (map fst xs)) >>= (`pick` xs)
+frequency xs0 = choose (1, sum (map fst xs0)) >>= (`pick` xs0)
   where pick :: Int -> [(Int, Gen a)] -> Gen a
         pick _ [] = error "QuickCheck.pick used with empty list."
         pick n ((k, x):ys) | n <= k    = x
@@ -115,7 +117,7 @@ instance (Arbitrary a, Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
   arbitrary = promote (`coarbitrary` arbitrary)
 
 class Coarbitrary a where
-  coarbitrary :: a -> Gen b -> Gen b
+  coarbitrary :: a -> Gen b -> Gen b    -- Note: `b` can be anything.
 
 instance Coarbitrary Bool where
   coarbitrary b = variant (if b then 0 else 1)
@@ -132,8 +134,10 @@ instance Coarbitrary a => Coarbitrary [a] where
   coarbitrary []      = variant 0
   coarbitrary (a:as)  = variant 1 . coarbitrary a . coarbitrary as
 
+-- | Prem + pattern type signatures; note that type `c` can be anything.
 instance (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) where
-  coarbitrary f gen = arbitrary >>= ((`coarbitrary` gen) . f)
+  coarbitrary (f :: a -> b) (gen :: Gen c) =
+    (arbitrary :: Gen a)  >>= ((`coarbitrary` gen) . f)
 
 ------------------------------ Property ----------------------------------------
 newtype Property = Prop (Gen Result)
@@ -199,4 +203,32 @@ arbTree n = frequency [
       (4, liftM2 Branch (arbTree (n `div` 2)) (arbTree (n `div` 2)))
     ]
 
+------------------------------ Testing -----------------------------------------
+labelSpread :: [Result] -> M.Map String Int -> M.Map String Int
+labelSpread [] mp     = mp
+labelSpread (x:xs) mp = let mp' = spread (stamp x) mp in labelSpread xs mp'
+  where spread :: [String] -> M.Map String Int -> M.Map String Int
+        spread [] m     = m
+        spread (l:ls) m = let m' = M.insertWith (+) l 1 m in spread ls m'
+
+quickCheck :: Testable a => a -> IO ()
+quickCheck prop = do
+    results :: [Result] <- generate . replicateM 100 . evaluate $ prop
+    let numbered :: [(Int, Result)] = zip [1 ..] results
+        failures :: [(Int, Result)] = filter (\(_, x) -> ok x /= Just True) numbered
+    if length failures == 0 then printPass results else printFail failures
+  where printPass :: [Result] -> IO ()
+        printPass xs = do
+          putStrLn $ "OK: passed " <> show (length xs) <> " tests."
+          let ys :: [(String, Int)] = M.toList $ labelSpread xs M.empty
+          mapM_ (\(k, v) -> do let percent = (v * 100) `div` (length xs)
+                               putStrLn $ show percent <> "% " <> k) ys
+        printFail :: [(Int, Result)] -> IO ()
+        printFail xs = do
+          let (number, res) :: (Int, Result) = head $ xs
+          putStrLn $ "Falsifiable after " <> show number <> " tests:"
+          mapM_ (\x -> putStrLn $ id x) . arguments $ res   -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
+
+prop_1 :: [Int] -> [Int] -> Property
+prop_1 x y = classify (x ==[] || y == []) "empty" $ x ++ y /= y ++ x
 
