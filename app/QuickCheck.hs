@@ -211,28 +211,42 @@ histogram res = let freq = M.toList $ testFreq res M.empty in
           val     = show percent <> "%"
       in (k, val)) freq
   where testFreq :: [Result] -> M.Map String Int -> M.Map String Int
-        testFreq [] mp     = mp
-        testFreq (x:xs) mp = let mp' = testCaseFreq (stamp x) mp in testFreq xs mp'
+        testFreq xs mp = foldr (\x y -> testCaseFreq (stamp x) y) mp xs
         testCaseFreq :: [String] -> M.Map String Int -> M.Map String Int
-        testCaseFreq [] m     = m
-        testCaseFreq (l:ls) m = let m' = M.insertWith (+) l 1 m in testCaseFreq ls m'
+        testCaseFreq ls mp = foldr (\x y -> M.insertWith (+) x 1 y) mp ls
 
 quickCheck :: Testable a => a -> IO ()
-quickCheck prop = do
+quickCheck prop = check prop False
+
+check :: Testable a => a -> Bool -> IO ()
+check prop verbose = do
     results :: [Result] <- generate . replicateM 100 . evaluate $ prop
     let numbered :: [(Int, Result)] = zip [1 ..] results
         failures :: [(Int, Result)] = filter (\(_, x) -> ok x /= Just True) numbered
+    if verbose then printCases numbered else return ()
     if length failures == 0 then printPass results else printFail failures
-  where printPass :: [Result] -> IO ()
+  where printCases :: [(Int, Result)] -> IO ()
+        printCases = mapM_ (\(x, y) ->
+          do putStrLn $ "+++ Test case " <> show x <> ":"
+             printArgs $ arguments y)
+        printPass :: [Result] -> IO ()
         printPass xs = do
-          putStrLn $ "OK: passed " <> show (length xs) <> " tests."
-          mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) . histogram $ xs
+            putStrLn $ "+++ OK: passed " <> show (length xs) <> " tests."
+            mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) . histogram $ xs
         printFail :: [(Int, Result)] -> IO ()
         printFail xs = do
-          let (number, res) :: (Int, Result) = head $ xs
-          putStrLn $ "Falsifiable after " <> show number <> " tests:"
-          mapM_ (\x -> putStrLn $ id x) . arguments $ res   -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
+            let (number, res) :: (Int, Result) = head $ xs
+            putStrLn $ "+++ Falsifiable after " <> show number <> " tests:"
+            printArgs $ arguments res
+        printArgs :: [String] -> IO ()
+        printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)  -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
+
+verboseCheck :: Testable a => a -> IO ()
+verboseCheck prop = check prop True
 
 prop_1 :: [Int] -> [Int] -> Property
 prop_1 x y = collect (length x) $ x ++ y /= y ++ x
+
+prop_2 :: [Int] -> Property
+prop_2 x = collect (length x) $ classify (x==[]) "empty" $ reverse (reverse x) == x
 
