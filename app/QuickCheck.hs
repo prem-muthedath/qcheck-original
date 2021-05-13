@@ -204,12 +204,18 @@ arbTree n = frequency [
     ]
 
 ------------------------------ Testing -----------------------------------------
-labelSpread :: [Result] -> M.Map String Int -> M.Map String Int
-labelSpread [] mp     = mp
-labelSpread (x:xs) mp = let mp' = spread (stamp x) mp in labelSpread xs mp'
-  where spread :: [String] -> M.Map String Int -> M.Map String Int
-        spread [] m     = m
-        spread (l:ls) m = let m' = M.insertWith (+) l 1 m in spread ls m'
+histogram :: [Result] -> [(String, String)]
+histogram res = let freq = M.toList $ testFreq res M.empty in
+    map (\(k, v) ->
+      let percent = (v * 100) `div` (length res)
+          val     = show percent <> "%"
+      in (k, val)) freq
+  where testFreq :: [Result] -> M.Map String Int -> M.Map String Int
+        testFreq [] mp     = mp
+        testFreq (x:xs) mp = let mp' = testCaseFreq (stamp x) mp in testFreq xs mp'
+        testCaseFreq :: [String] -> M.Map String Int -> M.Map String Int
+        testCaseFreq [] m     = m
+        testCaseFreq (l:ls) m = let m' = M.insertWith (+) l 1 m in testCaseFreq ls m'
 
 quickCheck :: Testable a => a -> IO ()
 quickCheck prop = do
@@ -220,9 +226,7 @@ quickCheck prop = do
   where printPass :: [Result] -> IO ()
         printPass xs = do
           putStrLn $ "OK: passed " <> show (length xs) <> " tests."
-          let ys :: [(String, Int)] = M.toList $ labelSpread xs M.empty
-          mapM_ (\(k, v) -> do let percent = (v * 100) `div` (length xs)
-                               putStrLn $ show percent <> "% " <> k) ys
+          mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) . histogram $ xs
         printFail :: [(Int, Result)] -> IO ()
         printFail xs = do
           let (number, res) :: (Int, Result) = head $ xs
@@ -230,5 +234,5 @@ quickCheck prop = do
           mapM_ (\x -> putStrLn $ id x) . arguments $ res   -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
 
 prop_1 :: [Int] -> [Int] -> Property
-prop_1 x y = classify (x ==[] || y == []) "empty" $ x ++ y /= y ++ x
+prop_1 x y = collect (length x) $ x ++ y /= y ++ x
 
