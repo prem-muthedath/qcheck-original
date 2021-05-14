@@ -216,9 +216,6 @@ histogram res = let freq = M.toList $ testFreq res M.empty in
         testCaseFreq :: [String] -> M.Map String Int -> M.Map String Int
         testCaseFreq ls mp = foldr (\x y -> M.insertWith (+) x 1 y) mp ls
 
-quickCheck :: Testable a => a -> IO ()
-quickCheck prop = check prop False
-
 check :: Testable a => a -> Bool -> IO ()
 check prop verbose = do
     results :: [Result] <- generate . replicateM 100 . evaluate $ prop
@@ -251,9 +248,13 @@ check prop verbose = do
         printArgs :: [String] -> IO ()
         printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)  -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
 
+quickCheck :: Testable a => a -> IO ()
+quickCheck prop = check prop False
+
 verboseCheck :: Testable a => a -> IO ()
 verboseCheck prop = check prop True
 
+------------------------------ Properties --------------------------------------
 prop_1 :: [Int] -> [Int] -> Property
 prop_1 x y = collect (length x) $ x ++ y /= y ++ x
 
