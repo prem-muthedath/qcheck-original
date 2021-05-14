@@ -226,21 +226,21 @@ check prop verbose = do
       else printPass results
   where printFail :: [Result] -> IO ()
         printFail xs =
-          do let y = head $ findIndices (\x -> ok x == Just False) xs
-             if verbose then printCases (zip [1..y+1] xs) else return ()
-             putStrLn $ "*** Failed! Falsifiable after " <> show (y + 1) <> " tests:"
-             printArgs $ arguments (xs !! y)
+          do let i = head $ findIndices (\x -> ok x == Just False) xs
+             if verbose then printCases (zip [1..i+1] xs) else return ()
+             putStrLn $ "*** Failed! Falsifiable after " <> show (i + 1) <> " tests:"
+             printArgs $ arguments (xs !! i)
         printGaveUp :: [Result] -> IO ()
         printGaveUp xs = do
-             let i = findIndices (\x -> ok x /= Nothing) xs
-             putStrLn $ "*** Gave up! Passed only " <> show (length i) <> " tests."
-             if verbose then printCases $ map (\x -> (x + 1, xs !! x)) i
+             let is = findIndices (\x -> ok x /= Nothing) xs
+             putStrLn $ "*** Gave up! Passed only " <> show (length is) <> " tests."
+             if verbose then printCases $ map (\i -> (i + 1, xs !! i)) is
              else return ()
         printPass :: [Result] -> IO ()
         printPass xs = do
              if verbose then printCases (zip [1..] xs) else return ()
              putStrLn $ "+++ OK: passed " <> show (length xs) <> " tests."
-             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) . histogram $ xs
+             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram xs
         printCases :: [(Int, Result)] -> IO ()
         printCases = mapM_ (\(x, y) ->
           do putStrLn $ "+++ Test case " <> show x <> ":"
