@@ -22,6 +22,7 @@ module QuickCheck where
 import System.Random
 import Control.Monad
 import qualified Data.Map as M
+import Data.List (nub, findIndices, insert, sort)
 
 ------------------------------ Generators --------------------------------------
 newtype Gen a = Gen (Int -> StdGen -> a)
@@ -221,23 +222,32 @@ quickCheck prop = check prop False
 check :: Testable a => a -> Bool -> IO ()
 check prop verbose = do
     results :: [Result] <- generate . replicateM 100 . evaluate $ prop
-    let numbered :: [(Int, Result)] = zip [1 ..] results
-        failures :: [(Int, Result)] = filter (\(_, x) -> ok x /= Just True) numbered
-    if verbose then printCases numbered else return ()
-    if length failures == 0 then printPass results else printFail failures
-  where printCases :: [(Int, Result)] -> IO ()
+    if any (\x -> ok x == Just False) results
+      then printFail results
+      else if any (\x -> ok x == Nothing) results
+      then printGaveUp results
+      else printPass results
+  where printFail :: [Result] -> IO ()
+        printFail xs =
+          do let y = head $ findIndices (\x -> ok x == Just False) xs
+             if verbose then printCases (zip [1..y+1] xs) else return ()
+             putStrLn $ "*** Failed! Falsifiable after " <> show (y + 1) <> " tests:"
+             printArgs $ arguments (xs !! y)
+        printGaveUp :: [Result] -> IO ()
+        printGaveUp xs = do
+             let i = findIndices (\x -> ok x /= Nothing) xs
+             putStrLn $ "*** Gave up! Passed only " <> show (length i) <> " tests."
+             if verbose then printCases $ map (\x -> (x + 1, xs !! x)) i
+             else return ()
+        printPass :: [Result] -> IO ()
+        printPass xs = do
+             if verbose then printCases (zip [1..] xs) else return ()
+             putStrLn $ "+++ OK: passed " <> show (length xs) <> " tests."
+             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) . histogram $ xs
+        printCases :: [(Int, Result)] -> IO ()
         printCases = mapM_ (\(x, y) ->
           do putStrLn $ "+++ Test case " <> show x <> ":"
              printArgs $ arguments y)
-        printPass :: [Result] -> IO ()
-        printPass xs = do
-            putStrLn $ "+++ OK: passed " <> show (length xs) <> " tests."
-            mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) . histogram $ xs
-        printFail :: [(Int, Result)] -> IO ()
-        printFail xs = do
-            let (number, res) :: (Int, Result) = head $ xs
-            putStrLn $ "+++ Falsifiable after " <> show number <> " tests:"
-            printArgs $ arguments res
         printArgs :: [String] -> IO ()
         printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)  -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
 
@@ -248,5 +258,12 @@ prop_1 :: [Int] -> [Int] -> Property
 prop_1 x y = collect (length x) $ x ++ y /= y ++ x
 
 prop_2 :: [Int] -> Property
-prop_2 x = collect (length x) $ classify (x==[]) "empty" $ reverse (reverse x) == x
+prop_2 x = classify (x==[]) "empty" $
+           classify (length x > 10) "has > 5 elements" $
+           classify (x /= nub x) "has duplicates" $
+           reverse (reverse x) == x
+
+prop_3 :: Int -> [Int] -> Property
+prop_3 x xs = (ordered xs) ==> (ordered (insert x xs))
+  where ordered y = (y == sort y)
 
