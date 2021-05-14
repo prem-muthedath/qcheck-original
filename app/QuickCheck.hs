@@ -140,6 +140,22 @@ instance (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) where
   coarbitrary (f :: a -> b) (gen :: Gen c) =
     (arbitrary :: Gen a)  >>= ((`coarbitrary` gen) . f)
 
+------------------------------ Arbitrary Generators ----------------------------
+data Tree a = Leaf a | Branch (Tree a) (Tree a) deriving Show
+
+instance Arbitrary a => Arbitrary (Tree a) where
+  arbitrary = sized arbTree
+
+arbTree :: Arbitrary a => Int -> Gen (Tree a)
+arbTree 0 = liftM Leaf arbitrary
+arbTree n = frequency [
+      (1, liftM Leaf arbitrary),
+      (4, liftM2 Branch (arbTree (n `div` 2)) (arbTree (n `div` 2)))
+    ]
+
+orderedList :: forall a. (Ord a, Arbitrary a) => Gen [a]
+orderedList = sort <$> (arbitrary :: Gen [a])
+
 ------------------------------ Property ----------------------------------------
 newtype Property = Prop (Gen Result)
 
@@ -191,20 +207,6 @@ classify False _      = property
 collect :: (Show a, Testable b) => a -> b -> Property
 collect v = label (show v)
 
------------------------------- Example -----------------------------------------
-data Tree a = Leaf a | Branch (Tree a) (Tree a) deriving Show
-
-instance Arbitrary a => Arbitrary (Tree a) where
-  arbitrary = sized arbTree
-
-arbTree :: Arbitrary a => Int -> Gen (Tree a)
-arbTree 0 = liftM Leaf arbitrary
-arbTree n = frequency [
-      (1, liftM Leaf arbitrary),
-      (4, liftM2 Branch (arbTree (n `div` 2)) (arbTree (n `div` 2)))
-    ]
-
------------------------------- Testing -----------------------------------------
 histogram :: [Result] -> [(String, String)]
 histogram res = let freq = M.toList $ testFreq res M.empty in
     map (\(k, v) ->
@@ -216,6 +218,7 @@ histogram res = let freq = M.toList $ testFreq res M.empty in
         testCaseFreq :: [String] -> M.Map String Int -> M.Map String Int
         testCaseFreq ls mp = foldr (\x y -> M.insertWith (+) x 1 y) mp ls
 
+------------------------------ Testing -----------------------------------------
 check :: Testable a => a -> Bool -> IO ()
 check prop verbose = do
     results :: [Result] <- generate . replicateM 100 . evaluate $ prop
@@ -248,11 +251,11 @@ check prop verbose = do
         printArgs :: [String] -> IO ()
         printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)  -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
 
-quickCheck :: Testable a => a -> IO ()
-quickCheck prop = check prop False
-
 verboseCheck :: Testable a => a -> IO ()
 verboseCheck prop = check prop True
+
+quickCheck :: Testable a => a -> IO ()
+quickCheck prop = check prop False
 
 ------------------------------ Properties --------------------------------------
 prop_1 :: [Int] -> [Int] -> Property
@@ -267,4 +270,13 @@ prop_2 x = classify (x==[]) "empty" $
 prop_3 :: Int -> [Int] -> Property
 prop_3 x xs = (ordered xs) ==> (ordered (insert x xs))
   where ordered y = (y == sort y)
+
+prop_4 :: Int -> Property
+prop_4 x = forAll orderedList $ \xs ->
+    classify (xs==[]) "empty" $
+    classify (length xs > 10) "has > 10 elements" $
+    classify (xs /= nub xs) "has duplicates" $
+    ordered (insert x xs)
+  where ordered y = (y == sort y)
+
 
