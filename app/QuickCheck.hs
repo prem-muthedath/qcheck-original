@@ -207,55 +207,60 @@ classify False _      = property
 collect :: (Show a, Testable b) => a -> b -> Property
 collect v = label (show v)
 
+-- | for `foldr` usage, see /u/ bolo @ https://tinyurl.com/bbyw4hc (so)
 histogram :: [Result] -> [(String, String)]
-histogram res = let freq = M.toList $ testFreq res M.empty in
+histogram res = let freq = M.toList $ testFreq M.empty in
     map (\(k, v) ->
       let percent = (v * 100) `div` (length res)
           val     = show percent <> "%"
       in (k, val)) freq
-  where testFreq :: [Result] -> M.Map String Int -> M.Map String Int
-        testFreq xs mp = foldr (\x y -> testCaseFreq (stamp x) y) mp xs
-        testCaseFreq :: [String] -> M.Map String Int -> M.Map String Int
-        testCaseFreq ls mp = foldr (\x y -> M.insertWith (+) x 1 y) mp ls
+  where testFreq :: M.Map String Int -> M.Map String Int
+        testFreq mp = foldr (\x y -> tcFreq (stamp x) y) mp res
+        tcFreq :: [String] -> M.Map String Int -> M.Map String Int
+        tcFreq ls mp = foldr (\x y -> M.insertWith (+) x 1 y) mp ls
 
 ------------------------------ Testing -----------------------------------------
+quickCheck :: Testable a => a -> IO ()
+quickCheck prop = check prop False
+
+verboseCheck :: Testable a => a -> IO ()
+verboseCheck prop = check prop True
+
 check :: Testable a => a -> Bool -> IO ()
 check prop verbose = do
     results :: [Result] <- generate . replicateM 100 . evaluate $ prop
-    if any (\x -> ok x == Just False) results
-      then printFail results
-      else if any (\x -> ok x == Nothing) results
-      then printGaveUp results
-      else printPass results
-  where printFail :: [Result] -> IO ()
-        printFail xs =
-          do let i = head $ findIndices (\x -> ok x == Just False) xs
-             if verbose then printCases (zip [1..i+1] xs) else return ()
+    print' results verbose
+
+print' :: [Result] -> Bool -> IO ()
+print' res verbose
+    | any (\x -> ok x == Just False) res =
+      printFail
+    | any (\x -> ok x == Nothing) res =
+      printGaveUp
+    | otherwise = printPass
+  where printFail :: IO ()
+        printFail = do
+             let i = head $ findIndices (\x -> ok x == Just False) res
+             if verbose then printCases (zip [1 .. i+1] res) else return ()
              putStrLn $ "*** Failed! Falsifiable after " <> show (i + 1) <> " tests:"
-             printArgs $ arguments (xs !! i)
-        printGaveUp :: [Result] -> IO ()
-        printGaveUp xs = do
-             let is = findIndices (\x -> ok x /= Nothing) xs
+             printArgs $ arguments (res !! i)
+        printGaveUp :: IO ()
+        printGaveUp = do
+             let is = findIndices (\x -> ok x /= Nothing) res
              putStrLn $ "*** Gave up! Passed only " <> show (length is) <> " tests."
-             if verbose then printCases $ map (\i -> (i + 1, xs !! i)) is
+             if verbose then printCases $ map (\i -> (i + 1, res !! i)) is
              else return ()
-        printPass :: [Result] -> IO ()
-        printPass xs = do
-             if verbose then printCases (zip [1..] xs) else return ()
-             putStrLn $ "+++ OK: passed " <> show (length xs) <> " tests."
-             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram xs
+        printPass :: IO ()
+        printPass = do
+             if verbose then printCases (zip [1..] res) else return ()
+             putStrLn $ "+++ OK: passed " <> show (length res) <> " tests."
+             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram res
         printCases :: [(Int, Result)] -> IO ()
         printCases = mapM_ (\(x, y) ->
           do putStrLn $ "+++ Test case " <> show x <> ":"
              printArgs $ arguments y)
         printArgs :: [String] -> IO ()
         printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)  -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
-
-verboseCheck :: Testable a => a -> IO ()
-verboseCheck prop = check prop True
-
-quickCheck :: Testable a => a -> IO ()
-quickCheck prop = check prop False
 
 ------------------------------ Properties --------------------------------------
 prop_1 :: [Int] -> [Int] -> Property
