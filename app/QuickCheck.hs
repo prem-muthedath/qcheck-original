@@ -55,34 +55,35 @@ check prop verbose = do
 
 -- | prints results of tests to stdout. if `verbose`, prints appropriate 
 -- generated test cases as well to stdout.
+-- we limit bad test cases to < 10%.
 print' :: [Result] -> Bool -> IO ()
 print' res verbose
-    | failed = printFail
-    | badPercent >= 10 = printGaveUp    -- limit bad test cases to < 10%.
+    | any failed res =
+      printFail
+    | length res <= 10 * length (filter bad res) =    -- limit bad ones to < 10%
+      printGaveUp
     | otherwise = printPass
-  where failed :: Bool
-        failed = any (\x -> ok x == Just False) res
-        badPercent :: Int
-        badPercent =
-          let bad = length $ filter (\x -> ok x == Nothing) res
-              tot = length res
-          in (bad * 100) `div` tot
-        printFail :: IO ()
+  where printFail :: IO ()
         printFail = do
-             let i = head $ findIndices (\x -> ok x == Just False) res
-             if verbose then printCases (zip [1 .. i+1] res) else return ()
+             let i = head $ findIndices failed res
+             if verbose
+                then printCases (zip [1 .. i+1] res)
+                else return ()
              putStrLn $ "*** Failed! Falsifiable after " <> show (i + 1) <> " tests:"
              printArgs $ arguments (res !! i)
         printGaveUp :: IO ()
         printGaveUp = do
-             let is = findIndices (\x -> ok x /= Nothing) res
+             let is = findIndices good res
+             if verbose
+                then printCases $ map (\i -> (i + 1, res !! i)) is
+                else return ()
              putStrLn $ "*** Gave up! Passed only " <> show (length is) <> " tests."
-             if verbose then printCases $ map (\i -> (i + 1, res !! i)) is
-             else return ()
         printPass :: IO ()
         printPass = do
-             let pass = filter (\x -> ok x == Just True) res
-             if verbose then printCases (zip [1..] pass) else return ()
+             let numbered     = zip [1..] res
+                 pass         = filter passed res
+                 passNumbered = filter (\(_, y) -> passed y) numbered
+             if verbose then printCases passNumbered else return ()
              putStrLn $ "+++ OK: passed " <> show (length pass) <> " tests."
              mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram pass
         printCases :: [(Int, Result)] -> IO ()
@@ -92,6 +93,25 @@ print' res verbose
         printArgs :: [String] -> IO ()
         -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
         printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)
+
+--------------------------------------------------------------------------------
+-- | helper functions to run tests.
+
+-- | True if test case is a failure.
+failed :: (Result -> Bool)
+failed = \x -> ok x == Just False
+
+-- | True if test case is invalid.
+bad :: (Result -> Bool)
+bad = \x -> ok x == Nothing
+
+-- | True if test case is valid.
+good :: (Result -> Bool)
+good = \x -> ok x /= Nothing
+
+-- | True if test case is a pass.
+passed :: (Result -> Bool)
+passed = \x -> ok x == Just True
 
 --------------------------------------------------------------------------------
 -- | test results analysis.
@@ -124,12 +144,15 @@ prop_2 x = classify (x==[]) "empty" $
            classify (x /= nub x) "has duplicates" $
            reverse (reverse x) == x
 
-prop_3 :: Int -> [Int] -> Property
-prop_3 x xs = (ordered xs) ==> (ordered (insert x xs))
+prop_3 :: Int -> Int -> Property
+prop_3 x y = (x >= (-25)) ==> (x + y == y + x)
+
+prop_4 :: Int -> [Int] -> Property
+prop_4 x xs = (ordered xs) ==> (ordered (insert x xs))
   where ordered y = (y == sort y)
 
-prop_4 :: Int -> Property
-prop_4 x = forAll orderedList $ \xs ->
+prop_5 :: Int -> Property
+prop_5 x = forAll orderedList $ \xs ->
     classify (xs==[]) "empty" $
     classify (length xs > 10) "has > 10 elements" $
     classify (xs /= nub xs) "has duplicates" $
