@@ -17,7 +17,7 @@ name:               qcheck-original
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
-synopsis:           QuickCheck original implementation (from hughes paper)
+synopsis:           QuickCheck original implementation (hughes et al).
 
 -- A longer description of the package.
 -- description:
@@ -42,26 +42,31 @@ maintainer:
 -- category:
 
 -- Extra files to be distributed with the package, such as examples or a README.
-extra-source-files: CHANGELOG.md
+extra-source-files: CHANGELOG.md,
+                    cabal.project.freeze
 
 -- compiler version
 tested-with: GHC == 8.10.4
 
-executable qcheck-original
-    -- .hs or .lhs file containing the Main module.
-    main-is:          Main.hs
+library
+    -- Modules exported by the library.
+    exposed-modules:  QuickCheck,
+                      QuickCheck.Generator,
+                      QuickCheck.Arbitrary,
+                      QuickCheck.Property,
+                      QuickCheck.Test
 
-    -- Modules included in this executable, other than Main.
-    other-modules: QuickCheck, Generator, Arbitrary, Property
+    -- Modules included in this library but not exported.
+    -- other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
+    other-extensions: ScopedTypeVariables
 
     -- Other library packages from which modules are imported.
     build-depends:    base ==4.14.1.0, containers ==0.6.2.1, random ==1.1
 
     -- Directories containing source files.
-    hs-source-dirs:   app
+    hs-source-dirs:   src
 
     -- Base language which the package is written in.
     default-language: Haskell2010
@@ -69,4 +74,24 @@ executable qcheck-original
     -- GHC options.
     ghc-options:  -O2 -fforce-recomp -Wall -Werror
 
+test-suite qcheck-original-test
+    -- Base language which the package is written in.
+    default-language: Haskell2010
+
+    -- The interface type and version of the test suite.
+    type:             exitcode-stdio-1.0
+
+    -- Directories containing source files.
+    hs-source-dirs:   test
+
+    -- The entrypoint to the test suite.
+    main-is:          Tests.hs
+
+    -- Test dependencies.
+    build-depends:    base ==4.14.1.0, qcheck-original ==0.1.0.0
+
+    -- GHC options.
+    ghc-options:  -O2 -fforce-recomp -Wall -Werror
+
+--------------------------------------------------------------------------------
 

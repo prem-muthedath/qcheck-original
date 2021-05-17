@@ -9,10 +9,10 @@
 --    2. cabal packaging;
 --    3. comments.
 
-module Property where
+module QuickCheck.Property where
 
-import Generator
-import Arbitrary
+import QuickCheck.Generator
+import QuickCheck.Arbitrary
   ( Arbitrary (..)
   )
 

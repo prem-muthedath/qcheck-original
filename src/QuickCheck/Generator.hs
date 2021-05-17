@@ -13,7 +13,7 @@
 --    5. cabal packaging;
 --    6. comments.
 
-module Generator where
+module QuickCheck.Generator where
 
 import System.Random
   ( StdGen

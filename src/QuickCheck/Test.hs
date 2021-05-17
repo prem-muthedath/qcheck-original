@@ -8,7 +8,7 @@
 --    2. cabal packaging;
 --    3. docs (most pulled from QuickCheck @ hackage).
 
--- Purpose: study & understand QuickCheck. using original version is very apt, 
+-- purpose: study & understand QuickCheck. using original version is very apt, 
 -- as it is simple & short, yet has all the key features of QuickCheck today.
 
 -- REF:
@@ -16,7 +16,11 @@
 -- QuickCheck @ hackage: https://tinyurl.com/e98m55wc
 -- begriffs: https://begriffs.com/posts/2017-01-14-design-use-quickcheck.html
 
-module QuickCheck where
+module QuickCheck.Test
+  ( quickCheck
+  , verboseCheck
+  )
+where
 
 import Control.Monad
   ( replicateM
@@ -24,16 +28,12 @@ import Control.Monad
 
 import Data.List
   ( findIndices
-  , nub
-  , insert
-  , sort
   )
 
 import qualified Data.Map as M
 
-import Generator    -- code almost entirely from hughes' paper.
-import Arbitrary    -- code almost entirely from hughes' paper.
-import Property     -- code almost entirely from hughes' paper.
+import QuickCheck.Generator    -- code almost entirely from hughes' paper.
+import QuickCheck.Property     -- code almost entirely from hughes' paper.
 
 --------------------------------------------------------------------------------
 -- | Running tests.
@@ -149,32 +149,6 @@ histogram res = let freq = M.toList $ testFreq M.empty in
         tcFreq :: [String] -> M.Map String Int -> M.Map String Int
         tcFreq ls mp = foldr (\x y -> M.insertWith (+) x 1 y) mp ls
 
------------------------------- Properties --------------------------------------
-prop_0 :: Int -> Int -> Bool
-prop_0 x y = x + y == y + x
-
-prop_1 :: [Int] -> [Int] -> Property
-prop_1 x y = collect (length x) $ x ++ y /= y ++ x
-
-prop_2 :: [Int] -> Property
-prop_2 x = classify (x==[]) "empty" $
-           classify (length x > 10) "has > 5 elements" $
-           classify (x /= nub x) "has duplicates" $
-           reverse (reverse x) == x
-
-prop_3 :: Int -> Int -> Property
-prop_3 x y = (x >= (-25)) ==> (x + y == y + x)
-
-prop_4 :: Int -> [Int] -> Property
-prop_4 x xs = (ordered xs) ==> (ordered (insert x xs))
-  where ordered y = (y == sort y)
-
-prop_5 :: Int -> Property
-prop_5 x = forAll orderedList $ \xs ->
-    classify (xs==[]) "empty" $
-    classify (length xs > 10) "has > 10 elements" $
-    classify (xs /= nub xs) "has duplicates" $
-    ordered (insert x xs)
-  where ordered y = (y == sort y)
+--------------------------------------------------------------------------------
 
 

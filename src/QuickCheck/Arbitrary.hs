@@ -10,7 +10,7 @@
 --    3. cabal packaging;
 --    4. comments.
 
-module Arbitrary
+module QuickCheck.Arbitrary
   (
   -- Arbitrary, Coarbitrary values classes
     Arbitrary (..)
@@ -36,7 +36,7 @@ import Control.Monad
 import Data.List
   ( sort
   )
-import Generator
+import QuickCheck.Generator
 
 --------------------------------------------------------------------------------
 -- | class Arbitrary
