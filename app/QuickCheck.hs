@@ -55,12 +55,12 @@ check prop verbose = do
 
 -- | prints results of tests to stdout. if `verbose`, prints appropriate 
 -- generated test cases as well to stdout.
--- we limit bad test cases to < 10%.
 print' :: [Result] -> Bool -> IO ()
 print' res verbose
     | any failed res =
       printFail
-    | length res <= 10 * length (filter bad res) =    -- limit bad ones to < 10%
+    | length res <= 10 * length (filter bad res) =
+      -- limit bad test cases to < 10%.
       printGaveUp
     | otherwise = printPass
   where printFail :: IO ()
@@ -69,7 +69,10 @@ print' res verbose
              if verbose
                 then printCases (zip [1 .. i+1] res)
                 else return ()
-             putStrLn $ "*** Failed! Falsifiable after " <> show (i + 1) <> " tests:"
+             putStrLn $
+                "*** Failed! Falsifiable after "
+                <> show (i + 1)
+                <> " tests:"
              printArgs $ arguments (res !! i)
         printGaveUp :: IO ()
         printGaveUp = do
@@ -77,18 +80,33 @@ print' res verbose
              if verbose
                 then printCases $ map (\i -> (i + 1, res !! i)) is
                 else return ()
-             putStrLn $ "*** Gave up! Passed only " <> show (length is) <> " tests."
+             putStrLn $
+                "*** Gave up! Passed only "
+                <> show (length is)
+                <> " tests."
         printPass :: IO ()
         printPass = do
              let numbered     = zip [1..] res
                  pass         = filter passed res
                  passNumbered = filter (\(_, y) -> passed y) numbered
-             if verbose then printCases passNumbered else return ()
-             putStrLn $ "+++ OK: passed " <> show (length pass) <> " tests."
-             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram pass
+             if verbose
+                then printCases passNumbered
+                else return ()
+             putStrLn $
+                "+++ OK: passed "
+                <> show (length pass)
+                <> " tests."
+             mapM_ (\(k, v) -> putStrLn $
+                v
+                <> " "
+                <> k
+              ) $ histogram pass
         printCases :: [(Int, Result)] -> IO ()
         printCases = mapM_ (\(x, y) ->
-          do putStrLn $ "+++ Test case " <> show x <> ":"
+          do putStrLn $
+                "+++ Test case "
+                <> show x
+                <> ":"
              printArgs $ arguments y)
         printArgs :: [String] -> IO ()
         -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
