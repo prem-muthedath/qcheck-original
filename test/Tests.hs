@@ -13,6 +13,9 @@ import Data.List
   , sort
   )
 
+--------------------------------------------------------------------------------
+-- | tests for QuickCheck.
+
 -- | enumeration of tests for QuickCheck.
 data Test = Pass
             | Fail
@@ -34,7 +37,7 @@ instance Show Test where
   show ForAll       = "*** QuickCheck forAll test ***"
 
 --------------------------------------------------------------------------------
--- | tests for QuickCheck.
+-- | properties to test QuickCheck.
 
 -- | QuickCheck `pass` test.
 prop_pass :: Int -> Int -> Bool
@@ -75,7 +78,8 @@ prop_forAll x = forAll orderedList $ \xs ->
   where ordered y = (y == sort y)
 
 --------------------------------------------------------------------------------
--- test QuickCheck.
+-- | test QuickCheck.
+
 -- NOTE: you've to visually verify the output to confirm if QuickCheck works.
 -- to test verbose, replace `quickCheck` with `verboseCheck` in below code.
 
