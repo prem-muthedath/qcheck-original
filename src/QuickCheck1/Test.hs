@@ -1,22 +1,21 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
--- | Simple QuickCheck implementation.
+-- | Run QuickCheck.
+-- author: Prem Muthedath.
+
 -- imported modules use hughes' original QuickCheck implementation (see `REF`).
--- additional source for code ideas, comments: QuickCheck @ hackage.
+-- additional source for code, ideas, comments: QuickCheck @ hackage.
 -- Prem Muthedath:
---    1. + all functions (this code not in Hughes` paper);
+--    1. + all code in this module (this code not in Hughes` paper);
 --    2. cabal packaging;
 --    3. docs (most pulled from QuickCheck @ hackage).
-
--- purpose: study & understand QuickCheck. using original version is very apt, 
--- as it is simple & short, yet has all the key features of QuickCheck today.
 
 -- REF:
 -- hughes: https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quick.pdf
 -- QuickCheck @ hackage: https://tinyurl.com/e98m55wc
 -- begriffs: https://begriffs.com/posts/2017-01-14-design-use-quickcheck.html
 
-module QuickCheck.Test
+module QuickCheck1.Test
   ( quickCheck
   , verboseCheck
   )
@@ -32,8 +31,8 @@ import Data.List
 
 import qualified Data.Map as M
 
-import QuickCheck.Generator    -- code almost entirely from hughes' paper.
-import QuickCheck.Property     -- code almost entirely from hughes' paper.
+import QuickCheck1.Generator    -- code almost entirely from hughes' paper.
+import QuickCheck1.Property     -- code almost entirely from hughes' paper.
 
 --------------------------------------------------------------------------------
 -- | Running tests.

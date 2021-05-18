@@ -50,11 +50,11 @@ tested-with: GHC == 8.10.4
 
 library
     -- Modules exported by the library.
-    exposed-modules:  QuickCheck,
-                      QuickCheck.Generator,
-                      QuickCheck.Arbitrary,
-                      QuickCheck.Property,
-                      QuickCheck.Test
+    exposed-modules:  QuickCheck1,
+                      QuickCheck1.Generator,
+                      QuickCheck1.Arbitrary,
+                      QuickCheck1.Property,
+                      QuickCheck1.Test
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -88,7 +88,7 @@ test-suite qcheck-original-test
     main-is:          Tests.hs
 
     -- Test dependencies.
-    build-depends:    base ==4.14.1.0, qcheck-original ==0.1.0.0
+    build-depends:    base ==4.14.1.0, qcheck-original
 
     -- GHC options.
     ghc-options:  -O2 -fforce-recomp -Wall -Werror

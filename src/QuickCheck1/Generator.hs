@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Test case generation.
+
 -- code source: original QuickCheck implementation, Hughes, et al.
 -- see hughes: https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quick.pdf
 -- module, function comments: QuickCheck @ hackage: https://tinyurl.com/e98m55wc
@@ -13,7 +14,7 @@
 --    5. cabal packaging;
 --    6. comments.
 
-module QuickCheck.Generator where
+module QuickCheck1.Generator where
 
 import System.Random
   ( StdGen
@@ -114,7 +115,7 @@ frequency xs0 = choose (1, sum (map fst xs0)) >>= (`pick` xs0)
                            | otherwise = pick (n-k) ys
 
 -- generates non-empty list of random length. size parameter governs max length.
--- Prem + this function (not in hughes' paper); modeled after code in QuickCheck 
+-- Prem + this function (not in hughes' paper); modeled after code in QuickCheck
 -- @ hackage, but hackage one has a slightly different implementation.
 listOf1 :: Gen a -> Gen [a]
 listOf1 gen = sized $ \n ->

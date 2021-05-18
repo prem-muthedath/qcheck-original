@@ -1,9 +1,11 @@
 -- | Test QuickCheck by running it on a bunch of properties.
+-- output visually (i.e., manually) verified to confirm if QuickCheck works!
 -- author: Prem Muthedath.
 --
 -- NOTE: since this file has no explicit module name, GHC, by default, treats it 
 -- as the `Main` module.  see https://tinyurl.com/3yw7tft7 (so)
-import QuickCheck
+
+import QuickCheck1
 
 import Data.List
   ( nub
@@ -11,43 +13,61 @@ import Data.List
   , sort
   )
 
+-- | enumeration of tests for QuickCheck.
+data Test = Pass
+            | Fail
+            | Collect
+            | Classify
+            | Implication
+            | GaveUp
+            | ForAll
+            deriving (Eq, Enum)
+
+-- | `Show` instance,
+instance Show Test where
+  show Pass         = "*** QuickCheck pass test ***"
+  show Fail         = "*** QuickCheck fail test ***"
+  show Collect      = "*** QuickCheck collect test ***"
+  show Classify     = "*** QuickCheck classify test ***"
+  show Implication  = "*** QuickCheck implication (==>) test ***"
+  show GaveUp       = "*** QuickCheck gave up! (==>) test ***"
+  show ForAll       = "*** QuickCheck forAll test ***"
+
 --------------------------------------------------------------------------------
--- | properties to be tested.
+-- | tests for QuickCheck.
 
--- | integer addition -- commutative?
--- used to check if `Bool` works.
-prop_add :: Int -> Int -> Bool
-prop_add x y = x + y == y + x
+-- | QuickCheck `pass` test.
+prop_pass :: Int -> Int -> Bool
+prop_pass x y = x + y == y + x
 
--- | concatenation of 2 lists of `Int` -- commutative?
--- used to check `collect`, `Property` return
-prop_concat :: [Int] -> [Int] -> Property
-prop_concat x y = collect (length x) $ x ++ y /= y ++ x
+-- | QuickCheck `fail' test.
+prop_fail :: [Int] -> [Int] -> Property
+prop_fail x y = collect (length x) $ x ++ y /= y ++ x
 
--- | simple list reverse.
--- used to check `classify`.
-prop_rev :: [Int] -> Property
-prop_rev x =
+-- | QuickCheck `collect` test.
+prop_collect :: [Int] -> Property
+prop_collect xs = collect (length xs) $ xs == reverse (reverse xs)
+
+-- | QuickCheck `classify` test.
+prop_classify :: [Int] -> Property
+prop_classify x =
     classify (x==[]) "empty" $
     classify (length x > 10) "has > 5 elements" $
     classify (x /= nub x) "has duplicates" $
     reverse (reverse x) == x
 
--- | inetger addition with implication -- commutative?
--- used to check `(==>)`.
-prop_cond_add :: Int -> Int -> Property
-prop_cond_add x y = (x >= (-25)) ==> (x + y == y + x)
+-- | QuickCheck implication (==>) test.
+prop_impl :: Int -> Int -> Property
+prop_impl x y = (x >= (-25)) ==> (x + y == y + x)
 
--- | list insert with implication -- still ordered?
--- used to check `(==>)`.
-prop_cond_ins :: Int -> [Int] -> Property
-prop_cond_ins x xs = (ordered xs) ==> (ordered (insert x xs))
+-- | QuickCheck 'gave up!' test.
+prop_gave_up :: Int -> [Int] -> Property
+prop_gave_up x xs = (ordered xs) ==> (ordered (insert x xs))
   where ordered y = (y == sort y)
 
--- list insert using `forAll` -- still ordered?
--- used to check `forAll`.
-prop_ins :: Int -> Property
-prop_ins x = forAll orderedList $ \xs ->
+-- QuickCheck `forAll` test.
+prop_forAll :: Int -> Property
+prop_forAll x = forAll orderedList $ \xs ->
     classify (xs==[]) "empty" $
     classify (length xs > 10) "has > 10 elements" $
     classify (xs /= nub xs) "has duplicates" $
@@ -55,23 +75,23 @@ prop_ins x = forAll orderedList $ \xs ->
   where ordered y = (y == sort y)
 
 --------------------------------------------------------------------------------
--- | main
+-- test QuickCheck.
+-- NOTE: you've to visually verify the output to confirm if QuickCheck works.
+-- to test verbose, replace `quickCheck` with `verboseCheck` in below code.
 
--- test properties.
+-- | main
 main :: IO ()
-main = do
-  putStrLn "--- add ---"
-  quickCheck prop_add
-  putStrLn "--- concat ---"
-  quickCheck prop_concat
-  putStrLn "--- rev ---"
-  quickCheck prop_rev
-  putStrLn "--- cond add ---"
-  quickCheck prop_cond_add
-  putStrLn "--- cond insert ---"
-  quickCheck prop_cond_ins
-  putStrLn "--- insert with forAll ---"
-  quickCheck prop_ins
+main = mapM_ (\x ->
+      do putStrLn $ "\n" <> show x
+         case x of
+             Pass         -> quickCheck prop_pass
+             Fail         -> quickCheck prop_fail
+             Collect      -> quickCheck prop_collect
+             Classify     -> quickCheck prop_classify
+             Implication  -> quickCheck prop_impl
+             GaveUp       -> quickCheck prop_gave_up
+             ForAll       -> quickCheck prop_forAll
+      ) [toEnum 0 :: Test ..]
 
 --------------------------------------------------------------------------------
 

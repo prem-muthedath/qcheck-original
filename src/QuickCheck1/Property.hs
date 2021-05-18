@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Combinators for constructing properties.
+
 -- code source: original QuickCheck implementation, Hughes, et al.
 -- see hughes: https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quick.pdf
 -- module, function comments: QuickCheck @ hackage: https://tinyurl.com/e98m55wc
@@ -9,10 +10,10 @@
 --    2. cabal packaging;
 --    3. comments.
 
-module QuickCheck.Property where
+module QuickCheck1.Property where
 
-import QuickCheck.Generator
-import QuickCheck.Arbitrary
+import QuickCheck1.Generator
+import QuickCheck1.Arbitrary
   ( Arbitrary (..)
   )
 

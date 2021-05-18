@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Type classes for random generation of values.
+
 -- code source: original QuickCheck implementation, Hughes, et al.
 -- see hughes: https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quick.pdf
 -- module, function comments: QuickCheck @ hackage: https://tinyurl.com/e98m55wc
@@ -10,7 +11,7 @@
 --    3. cabal packaging;
 --    4. comments.
 
-module QuickCheck.Arbitrary
+module QuickCheck1.Arbitrary
   (
   -- Arbitrary, Coarbitrary values classes
     Arbitrary (..)
@@ -36,7 +37,8 @@ import Control.Monad
 import Data.List
   ( sort
   )
-import QuickCheck.Generator
+
+import QuickCheck1.Generator
 
 --------------------------------------------------------------------------------
 -- | class Arbitrary
