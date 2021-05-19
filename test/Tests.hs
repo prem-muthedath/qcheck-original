@@ -39,19 +39,19 @@ instance Show Test where
 --------------------------------------------------------------------------------
 -- | properties to test QuickCheck.
 
--- | QuickCheck `pass` test.
+-- | QuickCheck `pass`.
 prop_pass :: Int -> Int -> Bool
 prop_pass x y = x + y == y + x
 
--- | QuickCheck `fail' test.
+-- | QuickCheck `fail'.
 prop_fail :: [Int] -> [Int] -> Property
 prop_fail x y = collect (length x) $ x ++ y /= y ++ x
 
--- | QuickCheck `collect` test.
+-- | QuickCheck `collect`.
 prop_collect :: [Int] -> Property
 prop_collect xs = collect (length xs) $ xs == reverse (reverse xs)
 
--- | QuickCheck `classify` test.
+-- | QuickCheck `classify`.
 prop_classify :: [Int] -> Property
 prop_classify x =
     classify (x==[]) "empty" $
@@ -59,16 +59,16 @@ prop_classify x =
     classify (x /= nub x) "has duplicates" $
     reverse (reverse x) == x
 
--- | QuickCheck implication (==>) test.
+-- | QuickCheck implication (==>).
 prop_impl :: Int -> Int -> Property
 prop_impl x y = (x >= (-25)) ==> (x + y == y + x)
 
--- | QuickCheck 'gave up!' test.
+-- | QuickCheck 'gave up!'.
 prop_gave_up :: Int -> [Int] -> Property
 prop_gave_up x xs = (ordered xs) ==> (ordered (insert x xs))
   where ordered y = (y == sort y)
 
--- QuickCheck `forAll` test.
+-- QuickCheck `forAll`.
 prop_forAll :: Int -> Property
 prop_forAll x = forAll orderedList $ \xs ->
     classify (xs==[]) "empty" $
