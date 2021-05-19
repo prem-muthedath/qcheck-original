@@ -85,11 +85,9 @@ print' res verbose
                 <> " tests."
         printPass :: IO ()
         printPass = do
-             let numbered     = zip [1..] res
-                 pass         = filter passed res
-                 passNumbered = filter (\(_, y) -> passed y) numbered
+             let pass = filter passed res
              if verbose
-                then printCases passNumbered
+                then printCases . filter (\(_, y) -> passed y) . zip [1..] $ res
                 else return ()
              putStrLn $
                 "+++ OK: passed "
