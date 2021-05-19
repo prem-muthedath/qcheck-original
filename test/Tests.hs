@@ -24,6 +24,7 @@ data Test = Pass
             | Implication
             | GaveUp
             | ForAll
+            | Frequency
             deriving (Eq, Enum)
 
 -- | `Show` instance,
@@ -35,6 +36,7 @@ instance Show Test where
   show Implication  = "*** QuickCheck implication (==>) test ***"
   show GaveUp       = "*** QuickCheck gave up! (==>) test ***"
   show ForAll       = "*** QuickCheck forAll test ***"
+  show Frequency    = "*** QuickCheck frequency test ***"
 
 --------------------------------------------------------------------------------
 -- | properties to test QuickCheck.
@@ -77,6 +79,20 @@ prop_forAll x = forAll orderedList $ \xs ->
     ordered (insert x xs)
   where ordered y = (y == sort y)
 
+-- | QuickCheck `frequency`.
+-- REF: https://begriffs.com/posts/2017-01-14-design-use-quickcheck.html
+prop_freq :: Property
+prop_freq = forAll myList $ \xs ->
+    classify (xs==[]) "empty" $
+    classify (length xs > 10) "has > 10 elements" $
+    classify (xs /= nub xs) "has duplicates" $
+    reverse (reverse xs) == xs
+  where myList :: Gen [Int]
+        myList = frequency
+          [ (1, return [])
+          , (4, ((:) <$> (arbitrary :: Gen Int)) <*> myList)
+          ]
+
 --------------------------------------------------------------------------------
 -- | test QuickCheck.
 
@@ -95,6 +111,7 @@ main = mapM_ (\x ->
              Implication  -> quickCheck prop_impl
              GaveUp       -> quickCheck prop_gave_up
              ForAll       -> quickCheck prop_forAll
+             Frequency    -> quickCheck prop_freq
       ) [toEnum 0 :: Test ..]
 
 --------------------------------------------------------------------------------
