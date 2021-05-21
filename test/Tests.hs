@@ -81,7 +81,7 @@ prop_pass x y = x + y == y + x
 prop_fail :: [Int] -> [Int] -> Bool
 prop_fail x y = x ++ y /= y ++ x
 
--- ** lables.
+-- ** labels.
 
 -- | QuickCheck `collect`.
 prop_collect :: [Int] -> Property
