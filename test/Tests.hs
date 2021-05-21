@@ -49,7 +49,7 @@ data Test
     | Choose
     deriving (Eq, Enum)
 
--- | `Show` instance,
+-- | `Show` instance.
 instance Show Test where
   show Pass         = "*** QuickCheck pass test ***"
   show Fail         = "*** QuickCheck fail test ***"
