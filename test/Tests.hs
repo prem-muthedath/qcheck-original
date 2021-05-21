@@ -90,9 +90,11 @@ prop_collect xs = collect (length xs) $ xs == reverse (reverse xs)
 -- | QuickCheck `classify`.
 prop_classify :: [Int] -> Property
 prop_classify x =
-    classify (x==[]) "empty" $
-    classify (length x > 10) "has > 5 elements" $
-    classify (x /= nub x) "has duplicates" $
+    classify (x==[]) "are empty" $
+    classify ((length x < 10) && x /= []) "have < 10 elements" $
+    classify (length x >= 10) "have > 10 elements" $
+    classify (x /= nub x) "have duplicate elements" $
+    classify (x == nub x) "have unique elements" $
     reverse (reverse x) == x
 
 -- ** checker combinators.
@@ -113,8 +115,8 @@ prop_forAll :: Int -> Property
 prop_forAll x = forAll (sort <$> (arbitrary :: Gen [Int])) $ \xs ->
     classify (ordered xs) "obeying forAll condition `sorted`" $
     classify (xs==[]) "empty" $
-    classify (length xs > 10) "has > 10 elements" $
-    classify (xs /= nub xs) "has duplicates" $
+    classify (length xs > 10) "have > 10 elements" $
+    classify (xs /= nub xs) "have duplicates" $
     ordered (insert x xs)
   where ordered :: Ord a => [a] -> Bool
         ordered y = (y == sort y)
@@ -126,8 +128,7 @@ prop_forAll x = forAll (sort <$> (arbitrary :: Gen [Int])) $ \xs ->
 prop_freq :: Property
 prop_freq = forAll myList $ \xs ->
     classify (xs==[]) "empty" $
-    classify (length xs >= 1) "has >= 1 element" $
-    classify (xs /= nub xs) "has duplicates" $
+    classify (length xs >= 1) "have >= 1 element" $
     reverse (reverse xs) == xs
   where myList :: Gen [Int]
         myList = frequency
@@ -140,8 +141,8 @@ prop_ord_list :: Property
 prop_ord_list = forAll (orderedList :: Gen [Int]) $ \xs ->
     classify (xs == sort (xs)) "ordered" $
     classify (xs==[]) "empty" $
-    classify (length xs > 10) "has > 10 elements" $
-    classify (xs /= nub xs) "has duplicates" $
+    classify (length xs > 10) "have > 10 elements" $
+    classify (xs /= nub xs) "have duplicates" $
     xs == sort xs
 
 -- | QuickCheck `vector`.
@@ -164,10 +165,10 @@ prop_list1 = forAll (listOf1 (arbitrary :: Gen Int)) $
 prop_tree :: Property
 prop_tree = forAll (arbitrary :: Gen (Tree Int)) $ \x ->
     classify (isValid x) "are valid trees" $
-    classify (depth x == 1) "has depth 1" $
-    classify (depth x == 2) "has depth 2" $
-    classify (depth x == 3) "has depth 3" $
-    classify (depth x > 3) "has depth > 3" $
+    classify (depth x == 1) "have depth 1" $
+    classify (depth x == 2) "have depth 2" $
+    classify (depth x == 3) "have depth 3" $
+    classify (depth x > 3) "have depth > 3" $
     isValid x
   where depth :: Tree a -> Int
         depth (Leaf _) = 1
@@ -190,9 +191,9 @@ prop_oneof = forAll (oneof [
       , return [11, 15, 4, 0]
       ]
     ) $ \(xs :: [Int]) ->
-          classify (elem xs [[]]) "is empty" $
-          classify (elem xs [[1, 2, 5]]) "is [1, 2, 5]" $
-          classify (elem xs [[11, 15, 4, 0]]) "is [11, 15, 4, 0]" $
+          classify (elem xs [[]]) "are empty" $
+          classify (elem xs [[1, 2, 5]]) "are [1, 2, 5]" $
+          classify (elem xs [[11, 15, 4, 0]]) "are [11, 15, 4, 0]" $
           elem xs [ [], [1, 2, 5], [11, 15, 4, 0] ]
 
 -- ** low-level combinators.
