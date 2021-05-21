@@ -99,7 +99,8 @@ prop_classify x =
 
 -- | QuickCheck implication (==>).
 prop_impl :: Int -> Int -> Property
-prop_impl x y = (x >= (-25)) ==> (x + y == y + x)
+prop_impl x y = (x >= (-25)) ==>
+    (classify (x >= (-25)) "passed are >= -25" $ (x + y == y + x))
 
 -- | QuickCheck 'gave up!'.
 prop_gave_up :: Int -> [Int] -> Property
@@ -110,6 +111,7 @@ prop_gave_up x xs = (ordered xs) ==> (ordered (insert x xs))
 -- QuickCheck `forAll`.
 prop_forAll :: Int -> Property
 prop_forAll x = forAll (sort <$> (arbitrary :: Gen [Int])) $ \xs ->
+    classify (ordered xs) "obeying forAll condition `sorted`" $
     classify (xs==[]) "empty" $
     classify (length xs > 10) "has > 10 elements" $
     classify (xs /= nub xs) "has duplicates" $
@@ -136,6 +138,7 @@ prop_freq = forAll myList $ \xs ->
 -- | QuickCheck `orderedList`.
 prop_ord_list :: Property
 prop_ord_list = forAll (orderedList :: Gen [Int]) $ \xs ->
+    classify (xs == sort (xs)) "ordered" $
     classify (xs==[]) "empty" $
     classify (length xs > 10) "has > 10 elements" $
     classify (xs /= nub xs) "has duplicates" $
@@ -144,22 +147,23 @@ prop_ord_list = forAll (orderedList :: Gen [Int]) $ \xs ->
 -- | QuickCheck `vector`.
 prop_vector :: Property
 prop_vector = forAll (vector 10 :: Gen [Int]) $ \xs ->
-    classify (length xs < 10) "has size < 10" $
-    classify (length xs == 10) "has size = 10" $
-    classify (length xs > 10) "has size > 10" $
-    id xs == xs
+    classify (length xs < 10) "have size < 10" $
+    classify (length xs == 10) "have size = 10" $
+    classify (length xs > 10) "have size > 10" $
+    length xs == 10
 
 -- | QuickCheck `listOf1`.
 prop_list1 :: Property
 prop_list1 = forAll (listOf1 (arbitrary :: Gen Int)) $
     \xs -> collect (length xs) $
-           classify (length xs > 0) "has >=1 element" $
-           reverse (reverse xs) == xs
+           classify (length xs > 0) "have >= 1 element" $
+           length xs >= 1
 
 -- | QuickCheck `tree`.
 -- `depth` implementation: see /u/ duplode @ https://tinyurl.com/6hatvhuc (so)
 prop_tree :: Property
 prop_tree = forAll (arbitrary :: Gen (Tree Int)) $ \x ->
+    classify (isValid x) "are valid trees" $
     classify (depth x == 1) "has depth 1" $
     classify (depth x == 2) "has depth 2" $
     classify (depth x == 3) "has depth 3" $
