@@ -114,7 +114,7 @@ frequency xs0 = choose (1, sum (map fst xs0)) >>= (`pick` xs0)
         pick n ((k, x):ys) | n <= k    = x
                            | otherwise = pick (n-k) ys
 
--- generates non-empty list of random length. size parameter governs max length.
+-- | generate non-empty list of random length. `size` governs max length.
 -- Prem + this function (not in hughes' paper); modeled after code in QuickCheck
 -- @ hackage, but hackage one has a slightly different implementation.
 listOf1 :: Gen a -> Gen [a]
