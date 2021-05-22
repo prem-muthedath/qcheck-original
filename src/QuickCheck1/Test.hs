@@ -45,7 +45,7 @@ quickCheck prop = check prop False
 verboseCheck :: Testable a => a -> IO ()
 verboseCheck prop = check prop True
 
--- | tests a prpoperty & prints results to stdout. if `verbose`, then prints all 
+-- | tests a property & prints results to stdout. if `verbose`, then prints all 
 -- generated test cases as well to stdout.
 check :: Testable a => a -> Bool -> IO ()
 check prop verbose = do
@@ -93,21 +93,7 @@ print' res verbose
                 "+++ OK: passed "
                 <> show (length pass)
                 <> " tests."
-             mapM_ (\(k, v) -> putStrLn $
-                v
-                <> " "
-                <> k
-              ) $ histogram pass
-        printCases :: [(Int, Result)] -> IO ()
-        printCases = mapM_ (\(x, y) ->
-          do putStrLn $
-                "+++ Test case "
-                <> show x
-                <> ":"
-             printArgs $ arguments y)
-        printArgs :: [String] -> IO ()
-        -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
-        printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)
+             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram pass
 
 --------------------------------------------------------------------------------
 -- | helper functions to run tests.
@@ -127,6 +113,20 @@ good = \x -> ok x /= Nothing
 -- | True if test case is a pass.
 passed :: (Result -> Bool)
 passed = \x -> ok x == Just True
+
+-- | print numbered test case results.
+printCases :: [(Int, Result)] -> IO ()
+printCases = mapM_ (\(x, y) ->
+  do putStrLn $
+        "+++ Test case "
+        <> show x
+        <> ":"
+     printArgs $ arguments y)
+
+-- | print a given list of `String` arguments to stdout.
+printArgs :: [String] -> IO ()
+-- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
+printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)
 
 --------------------------------------------------------------------------------
 -- | test results analysis.

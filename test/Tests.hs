@@ -92,7 +92,7 @@ prop_classify :: [Int] -> Property
 prop_classify x =
     classify (x==[]) "are empty" $
     classify ((length x < 10) && x /= []) "have < 10 elements" $
-    classify (length x >= 10) "have > 10 elements" $
+    classify (length x >= 10) "have >= 10 elements" $
     classify (x /= nub x) "have duplicate elements" $
     classify (x == nub x) "have unique elements" $
     reverse (reverse x) == x
