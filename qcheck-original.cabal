@@ -44,7 +44,8 @@ maintainer:
 -- Extra files to be distributed with the package, such as examples or a README.
 extra-source-files: CHANGELOG.md,
                     README.md,
-                    cabal.project.freeze
+                    cabal.project.freeze,
+                    test/sample-test-results.lhs
 
 -- compiler version
 tested-with: GHC == 8.10.4
