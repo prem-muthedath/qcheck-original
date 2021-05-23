@@ -87,7 +87,7 @@ print' res verbose
             else return ()
 
 --------------------------------------------------------------------------------
--- | helper functions to run tests.
+-- | helper functions to print test results.
 
 -- | True if test case is a failure.
 failed :: (Result -> Bool)
