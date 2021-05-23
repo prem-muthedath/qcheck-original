@@ -16,7 +16,8 @@ HOW TO RUN THE PROGRAM AND TESTS:
         - `cabal v2-repl :qcheck-original`
 
      after the load, you can use the library in `GHCi`, just as you would use 
-     any library; some examples:
+     any library; examples (first, enable `ScopedTypeVariables` as show below):
+        - `:set -XScopedTypeVariables`
         - `quickCheck (\(x :: Int) -> x + 1 == 1 + x)`
         - `verboseCheck (\(x :: Int) -> x + 1 == 1 + x)`
         - `do; y <- generate $ evaluate (\(x :: Int) -> x + 1 == 1 + x); print 
