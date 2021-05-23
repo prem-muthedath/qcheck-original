@@ -8,6 +8,8 @@ it is simple & short, yet has all the key features of QuickCheck today.
 
 REF: https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quick.pdf
 
+Prem Muthedath: all test code, code to run QuickCheck, cabal packaging.
+
 HOW TO RUN THE PROGRAM AND TESTS:
   1. `cd` to `qcheck-original`, the top directory containing this `README` file.
   2. to load QuickCheck library in `GHCi`, type below command & press `RETURN`:
