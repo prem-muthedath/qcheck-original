@@ -1,5 +1,6 @@
 -- | sample test results.
 -- author Prem Muthedath.
+
 *** QuickCheck pass test ***
 +++ OK: passed 100 tests.
 
