@@ -12,6 +12,7 @@ HOW TO RUN THE PROGRAM AND TESTS:
   1. `cd` to `qcheck-original`, the top directory containing this `README` file.
   2. to load QuickCheck library in `GHCi`, type below command & press `RETURN`:
         - `cabal v2-repl :qcheck-original`
+     
      after the load, you can use the library in `GHCi`, just as you would use 
      any library. here are some examples:
         - `quickCheck (\(x :: Int) -> x + 1 == 1 + x)`
