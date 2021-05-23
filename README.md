@@ -14,7 +14,7 @@ HOW TO RUN THE PROGRAM AND TESTS:
         - `cabal v2-repl :qcheck-original`
 
      after the load, you can use the library in `GHCi`, just as you would use 
-     any library. here are some examples:
+     any library; some examples:
         - `quickCheck (\(x :: Int) -> x + 1 == 1 + x)`
         - `verboseCheck (\(x :: Int) -> x + 1 == 1 + x)`
         - `do; y <- generate $ evaluate (\(x :: Int) -> x + 1 == 1 + x); print 
@@ -30,7 +30,7 @@ HOW TO RUN THE PROGRAM AND TESTS:
      `ENTER`, which will load the tests in `GHCi`:
         - `cabal v2-repl :qcheck-original-test`
 
-     you can then run any test you wish in `GHCi`.  here are some examples:
+     you can then run any test you wish in `GHCi`; some examples:
         - `quickCheck prop_pass`
         - `quickCheck prop_fail`
         - `quickCheck prop_choose`
