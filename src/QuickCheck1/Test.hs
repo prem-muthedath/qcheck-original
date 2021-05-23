@@ -64,36 +64,28 @@ print' res verbose
     | otherwise = printPass
   where printFail :: IO ()
         printFail = do
-             let i = head $ findIndices failed res
-             if verbose
-                then printCases (zip [1 .. i+1] res)
-                else return ()
-             putStrLn $
-                "*** Failed! Falsifiable after "
-                <> show (i + 1)
-                <> " tests:"
-             printArgs $ arguments (res !! i)
+            let i = head $ findIndices failed res
+            printCases (zip [1 .. i+1] res)
+            putStrLn $ "*** Failed! Falsifiable after " <> show (i + 1) <> " tests:"
+            printArgs $ arguments (res !! i)
         printGaveUp :: IO ()
         printGaveUp = do
-             let is = findIndices good res
-             if verbose
-                then printCases $ map (\i -> (i + 1, res !! i)) is
-                else return ()
-             putStrLn $
-                "*** Gave up! Passed only "
-                <> show (length is)
-                <> " tests."
+            let is = findIndices good res
+            printCases $ map (\i -> (i + 1, res !! i)) is
+            putStrLn $ "*** Gave up! Passed only " <> show (length is) <> " tests."
         printPass :: IO ()
         printPass = do
-             let pass = filter passed res
-             if verbose
-                then printCases . filter (\(_, y) -> passed y) . zip [1..] $ res
-                else return ()
-             putStrLn $
-                "+++ OK: passed "
-                <> show (length pass)
-                <> " tests."
-             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram pass
+            let pass = filter passed res
+            printCases . filter (\(_, y) -> passed y) . zip [1..] $ res
+            putStrLn $ "+++ OK: passed " <> show (length pass) <> " tests."
+            mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram pass
+        printCases :: [(Int, Result)] -> IO ()
+        printCases xs =
+            if verbose
+            then mapM_ (\(x, y) ->
+              do putStrLn $ "+++ Test case " <> show x <> ":"
+                 printArgs $ arguments y) xs
+            else return ()
 
 --------------------------------------------------------------------------------
 -- | helper functions to run tests.
@@ -113,15 +105,6 @@ good = \x -> ok x /= Nothing
 -- | True if test case is a pass.
 passed :: (Result -> Bool)
 passed = \x -> ok x == Just True
-
--- | print numbered test case results.
-printCases :: [(Int, Result)] -> IO ()
-printCases = mapM_ (\(x, y) ->
-  do putStrLn $
-        "+++ Test case "
-        <> show x
-        <> ":"
-     printArgs $ arguments y)
 
 -- | print a given list of `String` arguments to stdout.
 printArgs :: [String] -> IO ()
