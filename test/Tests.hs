@@ -26,11 +26,12 @@ data Test
     = Pass
     | Fail
 
-    -- labels
+    -- evaluate
+    | Eval
+
+    -- checker (or property) combinators
     | Collect
     | Classify
-
-    -- checker combinators
     | Implication
     | GaveUp
     | ForAll
@@ -53,6 +54,7 @@ data Test
 instance Show Test where
   show Pass         = "*** QuickCheck pass test ***"
   show Fail         = "*** QuickCheck fail test ***"
+  show Eval         = "*** QuickCheck evaluate test ***"
   show Collect      = "*** QuickCheck collect test ***"
   show Classify     = "*** QuickCheck classify test ***"
   show Implication  = "*** QuickCheck implication (==>) test ***"
@@ -81,7 +83,19 @@ prop_pass x y = x + y == y + x
 prop_fail :: [Int] -> [Int] -> Bool
 prop_fail x y = x ++ y /= y ++ x
 
--- ** labels.
+-- ** `evaluate`.
+
+-- | QuickCheck `evaluate`.
+prop_eval :: Property
+prop_eval = Prop $
+    do res :: Result <- evaluate (\(x :: Int) -> x + 1 == 1 + x)
+       case ok res of
+            Just y  -> return $ (clone res) { ok = Just y }
+            Nothing -> return $ (clone res) { ok = Nothing }
+  where clone :: Result -> Result
+        clone res = nothing { stamp = stamp res, arguments = arguments res }
+
+-- ** checker (or property) combinators.
 
 -- | QuickCheck `collect`.
 prop_collect :: [Int] -> Property
@@ -97,14 +111,12 @@ prop_classify x =
     classify (x == nub x) "have unique elements" $
     reverse (reverse x) == x
 
--- ** checker combinators.
-
--- | QuickCheck implication (==>).
+-- | QuickCheck `implication (==>) -- pass-gave-up border`.
 prop_impl :: Int -> Int -> Property
 prop_impl x y = (x >= (-25)) ==>
     (classify (x >= (-25)) "passed are >= -25" $ (x + y == y + x))
 
--- | QuickCheck 'gave up!'.
+-- | QuickCheck 'implication (==>) -- gave up!'.
 prop_gave_up :: Int -> [Int] -> Property
 prop_gave_up x xs = (ordered xs) ==> (ordered (insert x xs))
   where ordered :: Ord a => [a] -> Bool
@@ -226,6 +238,7 @@ main = mapM_ (\x ->
          case x of
              Pass         -> quickCheck prop_pass
              Fail         -> quickCheck prop_fail
+             Eval         -> quickCheck prop_eval
              Collect      -> quickCheck prop_collect
              Classify     -> quickCheck prop_classify
              Implication  -> quickCheck prop_impl
