@@ -80,8 +80,7 @@ print' res verbose
             putStrLn $ "+++ OK: passed " <> show (length pass) <> " tests."
             mapM_ (\(k, v) -> putStrLn $ v <> " " <> k) $ histogram pass
         printCases :: [(Int, Result)] -> IO ()
-        printCases xs =
-            if verbose
+        printCases xs = if verbose
             then mapM_ (\(x, y) ->
               do putStrLn $ "+++ Test case " <> show x <> ":"
                  printArgs $ arguments y) xs
@@ -107,8 +106,8 @@ passed :: (Result -> Bool)
 passed = \x -> ok x == Just True
 
 -- | print a given list of `String` arguments to stdout.
-printArgs :: [String] -> IO ()
 -- for `id` usage, see https://tinyurl.com/e9cmzc7c (so)
+printArgs :: [String] -> IO ()
 printArgs = mapM_ (\x -> putStrLn $ "    " <> id x)
 
 --------------------------------------------------------------------------------
