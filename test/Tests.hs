@@ -90,8 +90,8 @@ prop_eval :: Property
 prop_eval = Prop $
     do res :: Result <- evaluate (\(x :: Int) -> x + 1 == 1 + x)
        case ok res of
-            Just y  -> return $ (clone res) { ok = Just y }
-            Nothing -> return $ (clone res) { ok = Nothing }
+            Just y  -> return $ (clone res) { ok = Just (y == True) }
+            Nothing -> return $ (clone res) { ok = Just False }
   where clone :: Result -> Result
         clone res = nothing { stamp = stamp res, arguments = arguments res }
 
