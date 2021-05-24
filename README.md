@@ -16,8 +16,8 @@ REF:
   2. QuickCheck @ hackage: https://tinyurl.com/e98m55wc
 
 HOW TO RUN THE PROGRAM AND TESTS:
-  1. `cd` to `qcheck-original`, the top directory containing this `README` file; 
-     always remain in this directory to execute any of the steps below.
+  1. `cd` to `qcheck-original`, the top directory containing this `README` file, 
+     and remain there to execute any of the steps below.
   2. to load QuickCheck library into `GHCi`, type below command at the 
      commandline & press `RETURN`:
         - `cabal v2-repl :qcheck-original`
