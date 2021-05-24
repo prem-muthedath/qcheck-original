@@ -7,7 +7,7 @@ Purpose: study & understand QuickCheck. Using original version is very apt, as
 it is simple & short, yet has all the key features of QuickCheck today.
 
 Authors:
-  - most code from Hughes' paper (see REF).
+  - most core code from Hughes' paper (see REF).
   - docs, code (some modified), ideas sourced from QuickCheck @ hackage.
   - Prem Muthedath: test code, code to run QuickCheck, cabal packaging, docs.
 
@@ -16,7 +16,8 @@ REF:
   2. QuickCheck @ hackage: https://tinyurl.com/e98m55wc
 
 HOW TO RUN THE PROGRAM AND TESTS:
-  1. `cd` to `qcheck-original`, the top directory containing this `README` file.
+  1. `cd` to `qcheck-original`, the top directory containing this `README` file; 
+     always remain in this directory to execute any of the steps below.
   2. to load QuickCheck library into `GHCi`, type below command at the 
      commandline & press `RETURN`:
         - `cabal v2-repl :qcheck-original`

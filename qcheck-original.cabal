@@ -89,6 +89,9 @@ test-suite qcheck-original-test
     -- The entrypoint to the test suite.
     main-is:          Tests.hs
 
+    -- LANGUAGE extensions used by modules in this package.
+    other-extensions: ScopedTypeVariables
+
     -- Test dependencies.
     build-depends:    base ==4.14.1.0, qcheck-original
 
